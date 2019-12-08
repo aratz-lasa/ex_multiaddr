@@ -1,5 +1,5 @@
 # ex-multiaddr
-multiaddr implementation in Elixir [under development]
+[IPFS multiaddr](https://multiformats.io/multiaddr/) implementation in Elixir [under development]
 
 ## Installation
 Not yet published.
