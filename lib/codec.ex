@@ -3,25 +3,34 @@ defmodule Multiaddr.Codec do
   import Multiaddr.Utils
   alias Multiaddr.Protocol, as: Prot
 
-  defp validate_bytes(bytes, protocols_list) when bytes == "" do
+  defp extract_protocols(bytes, protocols_list) when bytes == <<>> do
     {:ok, protocols_list}
   end
 
-  defp validate_bytes(bytes, protocols_list) when is_binary(bytes) do
-    {:ok, {i, code}} = read_varint(bytes)
-    bytes = split_binary(bytes, i..-1)
-
-    with {:ok, protocol} <- Map.fetch(Prot.protocols_by_code(), code),
-         true <- byte_size(bytes) >= div(protocol.size, 8) do
-      validate_bytes(split_binary(bytes, div(protocol.size, 8)..-1), protocols_list ++ [protocol])
-    else
+  defp extract_protocols(bytes, protocols_list) when is_binary(bytes) do
+    case read_protocol(bytes) do
+      {:ok, next_index, {protocol, _value}} ->
+        extract_protocols(split_binary(bytes, next_index..-1), protocols_list ++ [protocol])
       _ ->
         {:error, "Invalid Multiaddr"}
     end
   end
 
+  def extract_protocols(bytes) when is_binary(bytes) do
+    extract_protocols(bytes, [])
+  end
+
+  def validate_bytes(bytes) when bytes == <<>> do
+    {:ok, "Valid bytes"}
+  end
+
   def validate_bytes(bytes) when is_binary(bytes) do
-    validate_bytes(bytes, [])
+    case read_protocol(bytes) do
+      {:ok, next_index, {_protocol, _value}} ->
+        validate_bytes(split_binary(bytes, next_index..-1))
+      _ ->
+        {:error, "Invalid Multiaddr"}
+    end
   end
 
   def string_to_bytes(string) when is_binary(string) do
@@ -46,6 +55,24 @@ defmodule Multiaddr.Codec do
     else
       _ ->
         {:error, "Invalid Multiaddr string"}
+    end
+  end
+
+  def bytes_to_string(bytes) when is_binary(bytes) do
+    bytes_to_string(bytes, "")
+  end
+
+  defp bytes_to_string(bytes, string) when bytes == <<>> and is_binary(string) do
+    {:ok, string}
+  end
+
+  defp bytes_to_string(bytes, string) when is_binary(bytes) and is_binary(string) do
+    case read_protocol(bytes) do
+      {:ok, next_index, {protocol, value}} ->
+        string = string <> "/" <> protocol.name <> "/" <> value
+        bytes_to_string(split_binary(bytes, next_index..-1), string)
+      _ ->
+        {:error, "Invalid Multiaddr"}
     end
   end
 

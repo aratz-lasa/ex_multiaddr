@@ -29,6 +29,13 @@ defmodule ExMultiaddrTest do
     assert tcp_value == "80"
   end
 
+  test "Multiadrr to string" do
+    maddr = create_multiaddr("/ip4/127.0.0.1/tcp/80")
+
+    string = Multiaddr.string(maddr)
+    assert string == "/ip4/127.0.0.1/tcp/80"
+  end
+
   defp create_multiaddr(maddr_string) when is_binary(maddr_string) do
     with {:ok, maddr} <- Multiaddr.new_multiaddr_from_string(maddr_string) do
       maddr

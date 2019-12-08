@@ -27,10 +27,13 @@ defmodule Multiaddr do
   end
 
   def string(%Multiaddr{} = maddr) do
+    with {:ok, string} <- Codec.bytes_to_string(maddr.bytes) do
+      string
+    end
   end
 
   def protocols(%Multiaddr{} = maddr) do
-    with {:ok, maddr_protocols} <- Codec.validate_bytes(maddr.bytes) do
+    with {:ok, maddr_protocols} <- Codec.extract_protocols(maddr.bytes) do
       maddr_protocols
     end
   end
