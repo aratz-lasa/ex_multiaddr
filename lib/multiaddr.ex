@@ -8,10 +8,9 @@ defmodule Multiaddr do
 
   def new_multiaddr_from_string(string) when is_binary(string) do
     with {:ok, bytes} <- Codec.string_to_bytes(string) do
-        {:ok, %Multiaddr{bytes: bytes}}
-      end
+      {:ok, %Multiaddr{bytes: bytes}}
+    end
   end
-
 
   def new_multiaddr_from_bytes(bytes) when is_binary(bytes) do
     with {:ok, _protocols} <- Codec.validate_bytes(bytes) do
@@ -28,7 +27,6 @@ defmodule Multiaddr do
   end
 
   def string(%Multiaddr{} = maddr) do
-
   end
 
   def protocols(%Multiaddr{} = maddr) do
@@ -43,7 +41,15 @@ defmodule Multiaddr do
   def decapsulate(%Multiaddr{} = maddr) do
   end
 
-  def value_for_protocol(%Multiaddr{} = maddr, code) when is_integer(code) do
+  def value_for_protocol(%Multiaddr{} = maddr, protocol) when is_binary(protocol) do
+    with {:ok, code} <- Map.fetch(Prot.protocols_by_name(), protocol) do
+      value_for_protocol(maddr, code)
+    else
+      _ -> {:error, "Invalid protocol"}
+    end
+  end
 
+  def value_for_protocol(%Multiaddr{} = maddr, code) when is_integer(code) do
+    Codec.find_protocol_value(maddr.bytes, code)
   end
 end

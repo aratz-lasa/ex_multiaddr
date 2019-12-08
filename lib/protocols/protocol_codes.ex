@@ -1,5 +1,4 @@
 defmodule Multiaddr.Protocol.Codes do
-
   import Multiaddr.Utils.Constants, only: :macros
 
   define(:c_ip4, 4)
@@ -32,5 +31,4 @@ defmodule Multiaddr.Protocol.Codes do
   define(:c_p2p_webrtc_direct, 276)
   define(:c_p2p_circuit, 290)
   define(:c_memory, 777)
-
 end
