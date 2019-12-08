@@ -36,6 +36,22 @@ defmodule ExMultiaddrTest do
     assert string == "/ip4/127.0.0.1/tcp/80"
   end
 
+  test "Encapsulate" do
+    maddr_1 = create_multiaddr("/ip4/127.0.0.1")
+    maddr_2 = create_multiaddr("/tcp/80")
+
+    {:ok, maddr} = Multiaddr.encapsulate(maddr_1, maddr_2)
+    assert maddr.bytes == create_multiaddr("/ip4/127.0.0.1/tcp/80").bytes
+  end
+
+  test "Decapsulate" do
+    maddr_1 = create_multiaddr("/ip4/127.0.0.1/tcp/80")
+    maddr_2 = create_multiaddr("/tcp/80")
+
+    {:ok, maddr} = Multiaddr.decapsulate(maddr_1, maddr_2)
+    assert maddr.bytes == create_multiaddr("/ip4/127.0.0.1").bytes
+  end
+
   defp create_multiaddr(maddr_string) when is_binary(maddr_string) do
     with {:ok, maddr} <- Multiaddr.new_multiaddr_from_string(maddr_string) do
       maddr

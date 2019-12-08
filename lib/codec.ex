@@ -11,6 +11,7 @@ defmodule Multiaddr.Codec do
     case read_protocol(bytes) do
       {:ok, next_index, {protocol, _value}} ->
         extract_protocols(split_binary(bytes, next_index..-1), protocols_list ++ [protocol])
+
       _ ->
         {:error, "Invalid Multiaddr"}
     end
@@ -28,6 +29,7 @@ defmodule Multiaddr.Codec do
     case read_protocol(bytes) do
       {:ok, next_index, {_protocol, _value}} ->
         validate_bytes(split_binary(bytes, next_index..-1))
+
       _ ->
         {:error, "Invalid Multiaddr"}
     end
@@ -71,17 +73,36 @@ defmodule Multiaddr.Codec do
       {:ok, next_index, {protocol, value}} ->
         string = string <> "/" <> protocol.name <> "/" <> value
         bytes_to_string(split_binary(bytes, next_index..-1), string)
+
       _ ->
         {:error, "Invalid Multiaddr"}
     end
   end
 
-  def find_protocol_value(bytes, code) when is_binary(bytes) and is_integer(code) do
+  def find_protocol_by_value(bytes, %Prot{} = protocol, value)
+      when is_binary(bytes) and is_binary(value) do
+    with {:ok, index, protocol_value} <- find_protocol(bytes, protocol) do
+      if value == protocol_value do
+        {:ok, index, protocol_value}
+      else
+        {:ok, {value_index, code}} = read_varint(bytes)
+        bytes = split_binary(bytes, (value_index + div(protocol.size, 8))..0)
+        find_protocol_by_value(bytes, protocol, value)
+      end
+    end
+  end
+
+  def find_protocol(bytes, %Prot{} = protocol) when is_binary(bytes) do
+    find_protocol(bytes, protocol.code, 0)
+  end
+
+  defp find_protocol(bytes, code, index)
+       when is_binary(bytes) and is_integer(code) and is_integer(index) do
     with {:ok, next_index, {protocol, value}} <- read_protocol(bytes) do
       if protocol.code == code do
-        {:ok, value}
+        {:ok, index, value}
       else
-        find_protocol_value(split_binary(bytes, next_index..-1), code)
+        find_protocol(split_binary(bytes, next_index..-1), code, index + next_index)
       end
     end
   end

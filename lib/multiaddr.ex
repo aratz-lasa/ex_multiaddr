@@ -1,5 +1,4 @@
 defmodule Multiaddr do
-  import Multiaddr.Varint
   import Multiaddr.Utils
   alias Multiaddr.Protocol, as: Prot
   alias Multiaddr.Codec
@@ -38,21 +37,41 @@ defmodule Multiaddr do
     end
   end
 
-  def encapsulate(%Multiaddr{} = maddr) do
+  def encapsulate(%Multiaddr{} = maddr_1, %Multiaddr{} = maddr_2) do
+    with {:ok, _protocols} <- Codec.validate_bytes(maddr_1.bytes),
+         {:ok, _protocols} <- Codec.validate_bytes(maddr_2.bytes) do
+      {:ok, %Multiaddr{bytes: maddr_1.bytes <> maddr_2.bytes}}
+    end
   end
 
-  def decapsulate(%Multiaddr{} = maddr) do
+  def decapsulate(%Multiaddr{} = maddr_1, %Multiaddr{} = maddr_2) do
+    protocol =
+      maddr_2
+      |> protocols()
+      |> Enum.at(0)
+
+    {:ok, value} = value_for_protocol(maddr_2, protocol.name)
+
+    with {:ok, index, _value} <- Codec.find_protocol_by_value(maddr_1.bytes, protocol, value) do
+      {:ok, %Multiaddr{bytes: split_binary(maddr_1.bytes, 0..(index - 1))}}
+    end
   end
 
-  def value_for_protocol(%Multiaddr{} = maddr, protocol) when is_binary(protocol) do
-    with {:ok, code} <- Map.fetch(Prot.protocols_by_name(), protocol) do
-      value_for_protocol(maddr, code)
+  def value_for_protocol(%Multiaddr{} = maddr, name) when is_binary(name) do
+    with {:ok, protocol} <- Map.fetch(Prot.protocols_by_name(), name),
+         {:ok, _index, value} <- Codec.find_protocol(maddr.bytes, protocol) do
+      {:ok, value}
     else
       _ -> {:error, "Invalid protocol"}
     end
   end
 
   def value_for_protocol(%Multiaddr{} = maddr, code) when is_integer(code) do
-    Codec.find_protocol_value(maddr.bytes, code)
+    with {:ok, protocol} <- Map.fetch(Prot.protocols_by_code(), code),
+         {:ok, _index, value} <- Codec.find_protocol(maddr.bytes, protocol) do
+      {:ok, value}
+    else
+      _ -> {:error, "Invalid protocol"}
+    end
   end
 end
