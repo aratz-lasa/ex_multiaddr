@@ -13,8 +13,8 @@ defmodule Multiaddr.Codec do
     bytes = split_binary(bytes, i..-1)
 
     with {:ok, protocol} <- Map.fetch(Prot.protocols_by_code, code),
-         true <- byte_size(bytes) >= protocol.size do
-      validate_bytes(split_binary(bytes, protocol.size..-1), [protocols_list, protocol])
+         true <- byte_size(bytes) >= div(protocol.size,8) do
+      validate_bytes(split_binary(bytes, div(protocol.size,8)..-1), protocols_list ++ [protocol])
     else
       _ ->
         {:error, "Invalid Multiaddr"}
@@ -31,7 +31,7 @@ defmodule Multiaddr.Codec do
     string = String.trim_trailing(string, "/")
     split_string = String.split(string, "/")
     with {:ok, ""} <- Enum.fetch(split_string, 0) do
-      string_to_bytes(Enum.slice(split_string, 1..-1))
+      string_to_bytes(Enum.slice(split_string, 1..-1), <<>>)
     end
   end
 
@@ -44,8 +44,8 @@ defmodule Multiaddr.Codec do
   defp string_to_bytes(string_split, bytes) when is_list(string_split) and is_binary(bytes) do
     with {:ok, protocol_name} <- Enum.fetch(string_split, 0),
          {:ok, protocol} <- Map.fetch(Prot.protocols_by_name, protocol_name),
-         {:ok, protocol_bytes} <- protocol.transcoder.string_to_bytes(Enum.at(string_split, 0)) do
-      bytes = bytes <> protocol.vcode
+         {:ok, protocol_bytes} <- protocol.transcoder.string_to_bytes.(Enum.at(string_split, 1)) do
+      bytes = bytes <> protocol.vcode <> protocol_bytes
       string_to_bytes(Enum.slice(string_split, 2..-1), bytes)
     else
       _ ->

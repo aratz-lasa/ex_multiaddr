@@ -6,15 +6,16 @@ defmodule Multiaddr do
 
   defstruct [:bytes]
 
-  def new_multiaddr(raw_bytes) when is_binary(raw_bytes) do
-    if String.valid?(raw_bytes) do  # String input
-      with {:ok, bytes} <- Codec.string_to_bytes(raw_bytes) do
+  def new_multiaddr_from_string(string) when is_binary(string) do
+    with {:ok, bytes} <- Codec.string_to_bytes(string) do
         {:ok, %Multiaddr{bytes: bytes}}
       end
-    else  # Raw binary input
-      with {:ok, _} <- Codec.validate_bytes(raw_bytes) do
-        {:ok, %Multiaddr{bytes: raw_bytes}}
-      end
+  end
+
+
+  def new_multiaddr_from_bytes(bytes) when is_binary(bytes) do
+    with {:ok, _protocols} <- Codec.validate_bytes(bytes) do
+      {:ok, %Multiaddr{bytes: bytes}}
     end
   end
 
@@ -31,7 +32,9 @@ defmodule Multiaddr do
   end
 
   def protocols(%Multiaddr{} = maddr) do
-    Codec.validate_bytes(maddr.bytes)
+    with {:ok, maddr_protocols} <- Codec.validate_bytes(maddr.bytes) do
+      maddr_protocols
+    end
   end
 
   def encapsulate(%Multiaddr{} = maddr) do
