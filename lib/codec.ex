@@ -69,7 +69,10 @@ defmodule Multiaddr.Codec do
 
     with {:ok, protocol} <- Map.fetch(Prot.protocols_by_code(), code),
          true <- byte_size(bytes) >= div(protocol.size, 8),
-         {:ok, protocol_value} <- protocol.transcoder.bytes_to_string.(split_binary(bytes, 0..(div(protocol.size, 8) - 1))) do
+         {:ok, protocol_value} <-
+           protocol.transcoder.bytes_to_string.(
+             split_binary(bytes, 0..(div(protocol.size, 8) - 1))
+           ) do
       {:ok, value_index + div(protocol.size, 8), {protocol, protocol_value}}
     else
       _ ->

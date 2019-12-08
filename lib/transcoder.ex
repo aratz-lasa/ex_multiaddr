@@ -45,6 +45,7 @@ defmodule Multiaddr.Transcoder do
   def port_string_to_bytes(string) when is_binary(string) do
     try do
       integer = String.to_integer(string)
+
       with true <- integer < 65536 do
         bytes = <<integer::size(16)>>
         {:ok, bytes}
@@ -59,8 +60,8 @@ defmodule Multiaddr.Transcoder do
     string_to_bytes: &ip4_string_to_bytes/1
   })
 
-  define(:port_transcoder,%__MODULE__{
-      bytes_to_string: &port_bytes_to_string/1,
-      string_to_bytes: &port_string_to_bytes/1
+  define(:port_transcoder, %__MODULE__{
+    bytes_to_string: &port_bytes_to_string/1,
+    string_to_bytes: &port_string_to_bytes/1
   })
 end
