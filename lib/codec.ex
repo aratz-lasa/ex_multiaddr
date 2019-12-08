@@ -85,7 +85,7 @@ defmodule Multiaddr.Codec do
       if value == protocol_value do
         {:ok, index, protocol_value}
       else
-        {:ok, {value_index, code}} = read_varint(bytes)
+        {:ok, {value_index, _code}} = read_varint(bytes)
         bytes = split_binary(bytes, (value_index + div(protocol.size, 8))..0)
         find_protocol_by_value(bytes, protocol, value)
       end
