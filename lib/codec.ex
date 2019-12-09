@@ -52,6 +52,13 @@ defmodule Multiaddr.Codec do
     with {:ok, protocol_name} <- Enum.fetch(string_split, 0),
          {:ok, protocol} <- Map.fetch(Prot.protocols_by_name(), protocol_name),
          {:ok, protocol_bytes} <- protocol.transcoder.string_to_bytes.(Enum.at(string_split, 1)) do
+      protocol_bytes =
+        if protocol.size == :prefixed_var_size do
+          Varint.LEB128.encode(byte_size(protocol_bytes)) <> protocol_bytes
+        else
+          protocol_bytes
+        end
+
       bytes = bytes <> protocol.vcode <> protocol_bytes
       string_to_bytes(Enum.slice(string_split, 2..-1), bytes)
     else
@@ -85,10 +92,17 @@ defmodule Multiaddr.Codec do
       if value == protocol_value do
         {:ok, index, protocol_value}
       else
-        {:ok, {value_index, _code}} = read_varint(bytes)
-        bytes = split_binary(bytes, (value_index + div(protocol.size, 8))..0)
-        find_protocol_by_value(bytes, protocol, value)
+        with {:ok, {next_index, _code}} <- read_varint(bytes),
+             bytes = split_binary(bytes, next_index..-1),
+             {:ok, {_index, size}} <- size_for_protocol(protocol, bytes) do
+          bytes
+          |> split_binary((next_index + size)..0)
+          |> find_protocol_by_value(protocol, value)
+        end
       end
+    else
+      error ->
+        {:error, {"Cannot find protocol", error}}
     end
   end
 
@@ -116,11 +130,13 @@ defmodule Multiaddr.Codec do
     bytes = split_binary(bytes, value_index..-1)
 
     with {:ok, protocol} <- Map.fetch(Prot.protocols_by_code(), code),
-         true <- byte_size(bytes) >= div(protocol.size, 8),
-         protocol_bytes = split_binary(bytes, 0..(div(protocol.size, 8) - 1)),
+         {:ok, {next_index, size}} <- size_for_protocol(protocol, bytes),
+         true <- byte_size(bytes) >= size,
+         bytes = split_binary(bytes, next_index..-1),
+         protocol_bytes = split_binary(bytes, 0..(size - 1)),
          {:ok, _bytes} <- protocol.transcoder.validate_bytes.(protocol_bytes),
          {:ok, protocol_value} <- protocol.transcoder.bytes_to_string.(protocol_bytes) do
-      {:ok, value_index + div(protocol.size, 8), {protocol, protocol_value}}
+      {:ok, value_index + next_index + size, {protocol, protocol_value}}
     else
       error ->
         {:error, {"Could not read protocol", error}}

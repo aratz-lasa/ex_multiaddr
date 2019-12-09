@@ -54,13 +54,22 @@ defmodule Multiaddr.Protocol do
     transcoder: Transcoder.port_transcoder()
   })
 
+  define(:proto_ip6zone, %__MODULE__{
+    name: "ip6zone",
+    code: c_ip6zone(),
+    vcode: Varint.code_to_varint(c_ip6zone()),
+    size: :prefixed_var_size,
+    transcoder: Transcoder.text_transcoder()
+  })
+
   define(:protocols_by_code, %{
     proto_ip4().code => proto_ip4(),
     proto_ip6().code => proto_ip6(),
     proto_tcp().code => proto_tcp(),
     proto_udp().code => proto_udp(),
     proto_dccp().code => proto_dccp(),
-    proto_sctp().code => proto_sctp()
+    proto_sctp().code => proto_sctp(),
+    proto_ip6zone().code => proto_ip6zone()
   })
 
   define(:protocols_by_name, %{
@@ -69,6 +78,7 @@ defmodule Multiaddr.Protocol do
     proto_tcp().name => proto_tcp(),
     proto_udp().name => proto_udp(),
     proto_dccp().name => proto_dccp(),
-    proto_sctp().name => proto_sctp()
+    proto_sctp().name => proto_sctp(),
+    proto_ip6zone().name => proto_ip6zone()
   })
 end

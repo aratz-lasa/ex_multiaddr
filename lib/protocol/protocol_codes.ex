@@ -6,7 +6,7 @@ defmodule Multiaddr.Protocol.Codes do
   define(:c_udp, 274)
   define(:c_dccp, 33)
   define(:c_ip6, 41)
-  define(:c_icp6zone, 42)
+  define(:c_ip6zone, 42)
   define(:c_dns, 53)
   define(:c_dns4, 54)
   define(:c_dnsaddr, 56)

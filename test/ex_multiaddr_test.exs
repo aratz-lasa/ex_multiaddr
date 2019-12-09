@@ -9,6 +9,13 @@ defmodule ExMultiaddrTest do
     assert Multiaddr.equal(maddr_1, maddr_2)
   end
 
+  test "Create Multiaddr (variable length protocol" do
+    maddr_string = "/ip6zone/zone_ip6_23/tcp/80"
+    {:ok, maddr_1} = Multiaddr.new_multiaddr_from_string(maddr_string)
+    {:ok, maddr_2} = Multiaddr.new_multiaddr_from_bytes(maddr_1.bytes)
+    assert Multiaddr.equal(maddr_1, maddr_2)
+  end
+
   test "Get Multiaddr Protocols" do
     maddr = create_multiaddr("/ip4/127.0.0.1/tcp/80")
 

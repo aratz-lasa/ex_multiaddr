@@ -162,7 +162,7 @@ defmodule Multiaddr.Transcoder do
     validate_bytes: &default_validate_bytes/1
   })
 
-  define(:ip6zone, %__MODULE__{
+  define(:text_transcoder, %__MODULE__{
     bytes_to_string: &text_bytes_to_string/1,
     string_to_bytes: &text_string_to_bytes/1,
     validate_bytes: &text_validate_bytes/1

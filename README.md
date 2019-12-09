@@ -25,7 +25,7 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 - [X] udp
 - [X] dccp
 - [X] ip6
-- [ ] ip6zone
+- [X] ip6zone
 - [ ] dns
 - [ ] dns4
 - [ ] dns6
@@ -93,8 +93,8 @@ protocols = Multiaddr.protocols(maddr)
 #   },
 #   vcode: <<4>>
 # }}
-{:ok, ip4_value} = Multiaddr.value_for_protocol(maddr, Multiaddr.Protocol.proto_ip4().code)
+{:ok, ip4_value} = Multiaddr.value_for_protocol(maddr, "ip4")
 # {:ok, "127.0.0.1"}
-{:ok, tcp_value} = Multiaddr.value_for_protocol(maddr, Multiaddr.Protocol.proto_tcp().code)
+{:ok, tcp_value} = Multiaddr.value_for_protocol(maddr, "tcp")
 # {:ok, "80"}
 ```
