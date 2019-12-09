@@ -22,15 +22,15 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 ## Protocols
 - [X] ip4
 - [X] tcp
-- [ ] udp
-- [ ] dccp
-- [ ] ip6
+- [X] udp
+- [X] dccp
+- [X] ip6
 - [ ] ip6zone
 - [ ] dns
 - [ ] dns4
 - [ ] dns6
 - [ ] dnsaddr
-- [ ] sctp
+- [X] sctp
 - [ ] udt
 - [ ] utp
 - [ ] unix
