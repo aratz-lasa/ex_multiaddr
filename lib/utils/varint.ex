@@ -1,4 +1,4 @@
-defmodule Multiaddr.Varint do
+defmodule Multiaddr.Utils.Varint do
   def read_varint(b) when is_binary(b) do
     list_b = :binary.bin_to_list(b)
     split_index = Enum.find_index(list_b, fn x -> x < 128 end)

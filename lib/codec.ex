@@ -1,5 +1,5 @@
 defmodule Multiaddr.Codec do
-  import Multiaddr.Varint
+  import Multiaddr.Utils.Varint
   import Multiaddr.Utils
   alias Multiaddr.Protocol, as: Prot
 
@@ -12,8 +12,8 @@ defmodule Multiaddr.Codec do
       {:ok, next_index, {protocol, _value}} ->
         extract_protocols(split_binary(bytes, next_index..-1), protocols_list ++ [protocol])
 
-      _ ->
-        {:error, "Invalid Multiaddr"}
+      error ->
+        {:error, {"Invalid Multiaddr", error}}
     end
   end
 
@@ -30,8 +30,8 @@ defmodule Multiaddr.Codec do
       {:ok, next_index, {_protocol, _value}} ->
         validate_bytes(split_binary(bytes, next_index..-1))
 
-      _ ->
-        {:error, "Invalid Multiaddr"}
+      error ->
+        {:error, {"Invalid Multiaddr bytes", error}}
     end
   end
 
@@ -55,8 +55,8 @@ defmodule Multiaddr.Codec do
       bytes = bytes <> protocol.vcode <> protocol_bytes
       string_to_bytes(Enum.slice(string_split, 2..-1), bytes)
     else
-      _ ->
-        {:error, "Invalid Multiaddr string"}
+      error ->
+        {:error, {"Invalid Multiaddr string", error}}
     end
   end
 
@@ -74,8 +74,8 @@ defmodule Multiaddr.Codec do
         string = string <> "/" <> protocol.name <> "/" <> value
         bytes_to_string(split_binary(bytes, next_index..-1), string)
 
-      _ ->
-        {:error, "Invalid Multiaddr"}
+      error ->
+        {:error, {"Invalid Multiaddr", error}}
     end
   end
 
@@ -123,8 +123,8 @@ defmodule Multiaddr.Codec do
            ) do
       {:ok, value_index + div(protocol.size, 8), {protocol, protocol_value}}
     else
-      _ ->
-        {:error, "Invalid Multiaddr"}
+      error ->
+        {:error, {"Could not read protocol", error}}
     end
   end
 end

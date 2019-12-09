@@ -12,7 +12,7 @@ defmodule Multiaddr do
   end
 
   def new_multiaddr_from_bytes(bytes) when is_binary(bytes) do
-    with {:ok, _protocols} <- Codec.validate_bytes(bytes) do
+    with {:ok, _} <- Codec.validate_bytes(bytes) do
       {:ok, %Multiaddr{bytes: bytes}}
     end
   end
@@ -21,45 +21,47 @@ defmodule Multiaddr do
     maddr1 == maddr2
   end
 
-  def bytes(%Multiaddr{} = maddr) do
-    maddr.bytes
+  def bytes(%Multiaddr{bytes: maddr_bytes} = _maddr) do
+    maddr_bytes
   end
 
-  def string(%Multiaddr{} = maddr) do
-    with {:ok, string} <- Codec.bytes_to_string(maddr.bytes) do
+  def string(%Multiaddr{bytes: maddr_bytes} = _maddr) do
+    with {:ok, string} <- Codec.bytes_to_string(maddr_bytes) do
       string
     end
   end
 
-  def protocols(%Multiaddr{} = maddr) do
-    with {:ok, maddr_protocols} <- Codec.extract_protocols(maddr.bytes) do
+  def protocols(%Multiaddr{bytes: maddr_bytes} = _maddr) do
+    with {:ok, maddr_protocols} <- Codec.extract_protocols(maddr_bytes) do
       maddr_protocols
     end
   end
 
-  def encapsulate(%Multiaddr{} = maddr_1, %Multiaddr{} = maddr_2) do
-    with {:ok, _protocols} <- Codec.validate_bytes(maddr_1.bytes),
-         {:ok, _protocols} <- Codec.validate_bytes(maddr_2.bytes) do
-      {:ok, %Multiaddr{bytes: maddr_1.bytes <> maddr_2.bytes}}
+  def encapsulate(
+        %Multiaddr{bytes: maddr_1_bytes} = _maddr_1,
+        %Multiaddr{bytes: maddr_2_bytes} = _maddr_2
+      ) do
+    with {:ok, _} <- Codec.validate_bytes(maddr_1_bytes),
+         {:ok, _} <- Codec.validate_bytes(maddr_2_bytes) do
+      {:ok, %Multiaddr{bytes: maddr_1_bytes <> maddr_2_bytes}}
     end
   end
 
-  def decapsulate(%Multiaddr{} = maddr_1, %Multiaddr{} = maddr_2) do
+  def decapsulate(%Multiaddr{bytes: maddr_1_bytes} = _maddr_1, %Multiaddr{} = maddr_2) do
     protocol =
       maddr_2
       |> protocols()
       |> Enum.at(0)
 
-    {:ok, value} = value_for_protocol(maddr_2, protocol.name)
-
-    with {:ok, index, _value} <- Codec.find_protocol_by_value(maddr_1.bytes, protocol, value) do
-      {:ok, %Multiaddr{bytes: split_binary(maddr_1.bytes, 0..(index - 1))}}
+    with {:ok, value} = value_for_protocol(maddr_2, protocol.name),
+         {:ok, index, _value} <- Codec.find_protocol_by_value(maddr_1_bytes, protocol, value) do
+      {:ok, %Multiaddr{bytes: split_binary(maddr_1_bytes, 0..(index - 1))}}
     end
   end
 
-  def value_for_protocol(%Multiaddr{} = maddr, name) when is_binary(name) do
+  def value_for_protocol(%Multiaddr{bytes: maddr_bytes} = _maddr, name) when is_binary(name) do
     with {:ok, protocol} <- Map.fetch(Prot.protocols_by_name(), name),
-         {:ok, _index, value} <- Codec.find_protocol(maddr.bytes, protocol) do
+         {:ok, _index, value} <- Codec.find_protocol(maddr_bytes, protocol) do
       {:ok, value}
     else
       _ -> {:error, "Invalid protocol"}

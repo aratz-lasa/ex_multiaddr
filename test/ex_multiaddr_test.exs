@@ -3,7 +3,7 @@ defmodule ExMultiaddrTest do
   doctest Multiaddr
 
   test "Create Multiaddr" do
-    maddr_string = "/ip4/127.0.0.1/tcp/80"
+    maddr_string = "/ip6/1::1/tcp/80"
     {:ok, maddr_1} = Multiaddr.new_multiaddr_from_string(maddr_string)
     {:ok, maddr_2} = Multiaddr.new_multiaddr_from_bytes(maddr_1.bytes)
     assert Multiaddr.equal(maddr_1, maddr_2)
