@@ -34,8 +34,8 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 - [X] udt
 - [X] utp
 - [X] unix
-- [ ] p2p
-- [ ] ipfs
+- [X] p2p
+- [X] ipfs
 - [ ] onion
 - [ ] onion3
 - [ ] garlic64
@@ -44,12 +44,12 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 - [X] http
 - [X] https
 - [X] ws
-- [ ] wss
+- [X] wss
 - [ ] p2p-websocket-star
 - [ ] p2p-stardust
 - [ ] p2p-webrtc-star
 - [ ] p2p-webrtc-direct
-- [ ] p2p-circuit
+- [X] p2p-circuit
 - [ ] memory
 
 

@@ -46,4 +46,12 @@ defmodule MultiaddrTranscoderTest do
     {:ok, path_string_trans} = Multiaddr.Transcoder.path_bytes_to_string(path_bytes)
     assert path_string == path_string_trans
   end
+
+  test "p2p" do
+    {:ok, multihash} = Multihash.encode(:sha1, :crypto.hash(:sha, "/multihash/address"))
+    p2p_string = B58.encode58(multihash)
+    {:ok, p2p_bytes} = Multiaddr.Transcoder.p2p_string_to_bytes(p2p_string)
+    {:ok, p2p_string_trans} = Multiaddr.Transcoder.p2p_bytes_to_string(p2p_bytes)
+    assert p2p_string == p2p_string_trans
+  end
 end

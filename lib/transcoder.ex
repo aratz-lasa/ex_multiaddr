@@ -140,6 +140,33 @@ defmodule Multiaddr.Transcoder do
     {:ok, bytes}
   end
 
+  # P2P/IPFS
+  def p2p_string_to_bytes(string) when is_binary(string) do
+    with true <- String.valid?(string),
+         {:ok, decoded_bytes} <- B58.decode58(string),
+         {:ok, _multihash} <- Multihash.decode(decoded_bytes) do
+      {:ok, decoded_bytes}
+    else
+      _ -> {:error, "Invalid string (p2p)"}
+    end
+  end
+
+  def p2p_bytes_to_string(bytes) when is_binary(bytes) do
+    with {:ok, _multihash} <- Multihash.decode(bytes),
+      encoded_string <- B58.encode58(bytes) do
+      {:ok, encoded_string}
+    else
+      _ -> {:error, "Invalid bytes (p2p)"}
+    end
+  end
+
+  def p2p_validate_bytes(bytes) when is_binary(bytes) do
+    case Multihash.decode(bytes) do
+      {:ok, _multihash} -> {:ok, bytes}
+      _ -> {:error, "Invalid bytes (p2p)"}
+    end
+  end
+
   define(:ip4_transcoder, %__MODULE__{
     bytes_to_string: &ip4_bytes_to_string/1,
     string_to_bytes: &ip4_string_to_bytes/1,
@@ -168,5 +195,11 @@ defmodule Multiaddr.Transcoder do
     bytes_to_string: &path_bytes_to_string/1,
     string_to_bytes: &path_string_to_bytes/1,
     validate_bytes: &path_validate_bytes/1
+  })
+
+  define(:p2p_transcoder, %__MODULE__{
+    bytes_to_string: &p2p_bytes_to_string/1,
+    string_to_bytes: &p2p_string_to_bytes/1,
+    validate_bytes: &p2p_validate_bytes/1
   })
 end

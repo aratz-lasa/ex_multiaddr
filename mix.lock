@@ -1,3 +1,7 @@
 %{
+  "base58": {:hex, :base58, "0.1.0", "ab34d1a4ef0f11ac61b9f5ad54c35826c3bdc541688a2f95183417272aa1fcfc", [:mix], [], "hexpm"},
+  "basefiftyeight": {:hex, :basefiftyeight, "0.1.0", "3d48544743bf9aab7ab02aed803ac42af77acf268c7d8c71d4f39e7fa85ee8d3", [:mix], [], "hexpm"},
+  "ex_multihash": {:hex, :ex_multihash, "1.0.0", "1833995f1871ad006a2e060b9dec0fc172e0e30796031f0a4cf11fcb5e626124", [:mix], [{:monad, "~> 1.0.4", [hex: :monad, repo: "hexpm", optional: false]}], "hexpm"},
+  "monad": {:hex, :monad, "1.0.4", "21504cdb9986cac3599055997dc984e77dbb89aef71decadf4921cf0e8f28c06", [:mix], [], "hexpm"},
   "varint": {:hex, :varint, "1.0.1", "081c8c9447a5384a3a6a6b48c1fc2a12554530757ab71e501a109f45c003bada", [:mix], [], "hexpm"},
 }
