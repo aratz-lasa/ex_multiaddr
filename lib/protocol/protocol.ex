@@ -4,7 +4,7 @@ defmodule Multiaddr.Protocol do
   alias Multiaddr.Transcoder
   alias Multiaddr.Utils.Varint
 
-  defstruct [:name, :code, :vcode, :size, :transcoder]
+  defstruct [:name, :code, :vcode, :transcoder, size: 0]
 
   define(:proto_ip4, %__MODULE__{
     name: "ip4",
@@ -12,14 +12,6 @@ defmodule Multiaddr.Protocol do
     vcode: Varint.code_to_varint(c_ip4()),
     size: 32,
     transcoder: Transcoder.ip4_transcoder()
-  })
-
-  define(:proto_ip6, %__MODULE__{
-    name: "ip6",
-    code: c_ip6(),
-    vcode: Varint.code_to_varint(c_ip6()),
-    size: 128,
-    transcoder: Transcoder.ip6_transcoder()
   })
 
   define(:proto_tcp, %__MODULE__{
@@ -46,12 +38,12 @@ defmodule Multiaddr.Protocol do
     transcoder: Transcoder.port_transcoder()
   })
 
-  define(:proto_sctp, %__MODULE__{
-    name: "sctp",
-    code: c_sctp(),
-    vcode: Varint.code_to_varint(c_sctp()),
-    size: 16,
-    transcoder: Transcoder.port_transcoder()
+  define(:proto_ip6, %__MODULE__{
+    name: "ip6",
+    code: c_ip6(),
+    vcode: Varint.code_to_varint(c_ip6()),
+    size: 128,
+    transcoder: Transcoder.ip6_transcoder()
   })
 
   define(:proto_ip6zone, %__MODULE__{
@@ -94,31 +86,55 @@ defmodule Multiaddr.Protocol do
     transcoder: Transcoder.text_transcoder()
   })
 
+  define(:proto_sctp, %__MODULE__{
+    name: "sctp",
+    code: c_sctp(),
+    vcode: Varint.code_to_varint(c_sctp()),
+    size: 16,
+    transcoder: Transcoder.port_transcoder()
+  })
+
+  define(:proto_udt, %__MODULE__{
+    name: "udt",
+    code: c_udt(),
+    vcode: Varint.code_to_varint(c_udt())
+  })
+
+  define(:proto_utp, %__MODULE__{
+    name: "utp",
+    code: c_utp(),
+    vcode: Varint.code_to_varint(c_utp())
+  })
+
   define(:protocols_by_code, %{
     proto_ip4().code => proto_ip4(),
-    proto_ip6().code => proto_ip6(),
     proto_tcp().code => proto_tcp(),
     proto_udp().code => proto_udp(),
     proto_dccp().code => proto_dccp(),
-    proto_sctp().code => proto_sctp(),
+    proto_ip6().code => proto_ip6(),
     proto_ip6zone().code => proto_ip6zone(),
     proto_dns().code => proto_dns(),
     proto_dns4().code => proto_dns4(),
     proto_dns6().code => proto_dns6(),
-    proto_dnsaddr().code => proto_dnsaddr()
+    proto_dnsaddr().code => proto_dnsaddr(),
+    proto_sctp().code => proto_sctp(),
+    proto_udt().code => proto_udt(),
+    proto_utp().code => proto_utp()
   })
 
   define(:protocols_by_name, %{
     proto_ip4().name => proto_ip4(),
-    proto_ip6().name => proto_ip6(),
     proto_tcp().name => proto_tcp(),
     proto_udp().name => proto_udp(),
     proto_dccp().name => proto_dccp(),
-    proto_sctp().name => proto_sctp(),
+    proto_ip6().name => proto_ip6(),
     proto_ip6zone().name => proto_ip6zone(),
     proto_dns().name => proto_dns(),
     proto_dns4().name => proto_dns4(),
     proto_dns6().name => proto_dns6(),
-    proto_dnsaddr().name => proto_dnsaddr()
+    proto_dnsaddr().name => proto_dnsaddr(),
+    proto_sctp().name => proto_sctp(),
+    proto_udt().name => proto_udt(),
+    proto_utp().name => proto_utp()
   })
 end

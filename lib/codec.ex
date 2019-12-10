@@ -8,8 +8,8 @@ defmodule Multiaddr.Codec do
   end
 
   defp extract_protocols(bytes, protocols_list) when is_binary(bytes) do
-    case read_protocol(bytes) do
-      {:ok, next_index, {protocol, _value}} ->
+    case read_raw_protocol(bytes) do
+      {:ok, {next_index, protocol, _raw_value}} ->
         extract_protocols(split_binary(bytes, next_index..-1), protocols_list ++ [protocol])
 
       error ->
@@ -26,8 +26,8 @@ defmodule Multiaddr.Codec do
   end
 
   def validate_bytes(bytes) when is_binary(bytes) do
-    case read_protocol(bytes) do
-      {:ok, next_index, {_protocol, _value}} ->
+    case read_raw_protocol(bytes) do
+      {:ok, {next_index, _protocol, _raw_value}} ->
         validate_bytes(split_binary(bytes, next_index..-1))
 
       error ->
@@ -51,16 +51,10 @@ defmodule Multiaddr.Codec do
   defp string_to_bytes(string_split, bytes) when is_list(string_split) and is_binary(bytes) do
     with {:ok, protocol_name} <- Enum.fetch(string_split, 0),
          {:ok, protocol} <- Map.fetch(Prot.protocols_by_name(), protocol_name),
-         {:ok, protocol_bytes} <- protocol.transcoder.string_to_bytes.(Enum.at(string_split, 1)) do
-      protocol_bytes =
-        if protocol.size == :prefixed_var_size do
-          Varint.LEB128.encode(byte_size(protocol_bytes)) <> protocol_bytes
-        else
-          protocol_bytes
-        end
-
+         string_split <- Enum.slice(string_split, 1..-1),
+         {:ok, {next_index, protocol_bytes}} <- get_protocol_value(protocol, string_split) do
       bytes = bytes <> protocol.vcode <> protocol_bytes
-      string_to_bytes(Enum.slice(string_split, 2..-1), bytes)
+      string_to_bytes(Enum.slice(string_split, next_index..-1), bytes)
     else
       error ->
         {:error, {"Invalid Multiaddr string", error}}
@@ -77,8 +71,14 @@ defmodule Multiaddr.Codec do
 
   defp bytes_to_string(bytes, string) when is_binary(bytes) and is_binary(string) do
     case read_protocol(bytes) do
-      {:ok, next_index, {protocol, value}} ->
-        string = string <> "/" <> protocol.name <> "/" <> value
+      {:ok, {next_index, protocol, value}} ->
+        string =
+          if protocol.size == 0 do
+            string <> "/" <> protocol.name
+          else
+            string <> "/" <> protocol.name <> "/" <> value
+          end
+
         bytes_to_string(split_binary(bytes, next_index..-1), string)
 
       error ->
@@ -112,7 +112,7 @@ defmodule Multiaddr.Codec do
 
   defp find_protocol(bytes, code, index)
        when is_binary(bytes) and is_integer(code) and is_integer(index) do
-    with {:ok, next_index, {protocol, value}} <- read_protocol(bytes) do
+    with {:ok, {next_index, protocol, value}} <- read_protocol(bytes) do
       if protocol.code == code do
         {:ok, index, value}
       else
@@ -121,11 +121,25 @@ defmodule Multiaddr.Codec do
     end
   end
 
-  defp read_protocol(bytes) when bytes == <<>> do
+  defp read_protocol(bytes) when is_binary(bytes) do
+    with {:ok, {next_index, protocol, raw_value}} <- read_raw_protocol(bytes) do
+      value =
+        if protocol.size > 0 do
+          {:ok, value} = protocol.transcoder.bytes_to_string.(raw_value)
+          value
+        else
+          raw_value
+        end
+
+      {:ok, {next_index, protocol, value}}
+    end
+  end
+
+  defp read_raw_protocol(bytes) when bytes == <<>> do
     {:error, "End of bytes"}
   end
 
-  defp read_protocol(bytes) when is_binary(bytes) do
+  defp read_raw_protocol(bytes) when is_binary(bytes) do
     {:ok, {value_index, code}} = read_varint(bytes)
     bytes = split_binary(bytes, value_index..-1)
 
@@ -133,26 +147,44 @@ defmodule Multiaddr.Codec do
          {:ok, {next_index, size}} <- size_for_protocol(protocol, bytes),
          true <- byte_size(bytes) >= size,
          bytes = split_binary(bytes, next_index..-1),
-         {:ok, protocol_bytes} = read_protocol_value(protocol, bytes, size),
-         {:ok, protocol_value} <- protocol.transcoder.bytes_to_string.(protocol_bytes) do
-      {:ok, value_index + next_index + size, {protocol, protocol_value}}
+         {:ok, protocol_bytes} = read_raw_protocol_value(protocol, bytes, size) do
+      {:ok, {value_index + next_index + size, protocol, protocol_bytes}}
     else
       error ->
         {:error, {"Could not read protocol", error}}
     end
   end
 
-  defp read_protocol_value(_protocol, bytes, size) when is_binary(bytes) and size == 0 do
+  defp read_raw_protocol_value(_protocol, bytes, size) when is_binary(bytes) and size == 0 do
     {:ok, ""}
   end
 
-  defp read_protocol_value(protocol, bytes, size)
+  defp read_raw_protocol_value(protocol, bytes, size)
        when is_binary(bytes) and is_integer(size) and size > 0 and byte_size(bytes) >= size do
     protocol_bytes = split_binary(bytes, 0..(size - 1))
 
     case protocol.transcoder.validate_bytes.(protocol_bytes) do
       {:ok, _bytes} -> {:ok, protocol_bytes}
       error -> {:error, {"Error reading protocol value", error}}
+    end
+  end
+
+  defp get_protocol_value(%Prot{size: size} = _protocol, string_split)
+       when size == 0 and is_list(string_split) do
+    {:ok, {0, ""}}
+  end
+
+  defp get_protocol_value(%Prot{size: size} = protocol, string_split)
+       when size == :prefixed_var_size do
+    with {:ok, protocol_bytes} <- protocol.transcoder.string_to_bytes.(Enum.at(string_split, 0)) do
+      protocol_bytes = Varint.LEB128.encode(byte_size(protocol_bytes)) <> protocol_bytes
+      {:ok, {1, protocol_bytes}}
+    end
+  end
+
+  defp get_protocol_value(%Prot{size: size} = protocol, string_split) when size > 0 do
+    with {:ok, protocol_bytes} <- protocol.transcoder.string_to_bytes.(Enum.at(string_split, 0)) do
+      {:ok, {1, protocol_bytes}}
     end
   end
 end
