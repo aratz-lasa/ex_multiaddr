@@ -33,7 +33,7 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 - [X] sctp
 - [X] udt
 - [X] utp
-- [ ] unix
+- [X] unix
 - [ ] p2p
 - [ ] ipfs
 - [ ] onion
@@ -61,7 +61,6 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 maddr_string = "/ip4/127.0.0.1/tcp/80"
 {:ok, maddr} = Multiaddr.new_multiaddr_from_string(maddr_string)
 # {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1, 6, 0, 80>>}}
-## 
 ```
 
 ### En/Decapsulate

@@ -127,6 +127,19 @@ defmodule Multiaddr.Transcoder do
     end
   end
 
+  # Path
+  def path_string_to_bytes(string) when is_binary(string) do
+    {:ok, string}
+  end
+
+  def path_bytes_to_string(bytes) when is_binary(bytes) do
+    {:ok, bytes}
+  end
+
+  def path_validate_bytes(bytes) when is_binary(bytes) do
+    {:ok, bytes}
+  end
+
   define(:ip4_transcoder, %__MODULE__{
     bytes_to_string: &ip4_bytes_to_string/1,
     string_to_bytes: &ip4_string_to_bytes/1,
@@ -149,5 +162,11 @@ defmodule Multiaddr.Transcoder do
     bytes_to_string: &text_bytes_to_string/1,
     string_to_bytes: &text_string_to_bytes/1,
     validate_bytes: &text_validate_bytes/1
+  })
+
+  define(:path_transcoder, %__MODULE__{
+    bytes_to_string: &path_bytes_to_string/1,
+    string_to_bytes: &path_string_to_bytes/1,
+    validate_bytes: &path_validate_bytes/1
   })
 end

@@ -39,4 +39,11 @@ defmodule MultiaddrTranscoderTest do
     ip6_string_wrong = "1::1::1"
     {:error, _} = Multiaddr.Transcoder.ip6_string_to_bytes(ip6_string_wrong)
   end
+
+  test "path" do
+    path_string = "/home/multiaddr"
+    {:ok, path_bytes} = Multiaddr.Transcoder.path_string_to_bytes(path_string)
+    {:ok, path_string_trans} = Multiaddr.Transcoder.path_bytes_to_string(path_bytes)
+    assert path_string == path_string_trans
+  end
 end

@@ -4,7 +4,7 @@ defmodule Multiaddr.Protocol do
   alias Multiaddr.Transcoder
   alias Multiaddr.Utils.Varint
 
-  defstruct [:name, :code, :vcode, :transcoder, size: 0]
+  defstruct [:name, :code, :vcode, :transcoder, path: false, size: 0]
 
   define(:proto_ip4, %__MODULE__{
     name: "ip4",
@@ -106,6 +106,14 @@ defmodule Multiaddr.Protocol do
     vcode: Varint.code_to_varint(c_utp())
   })
 
+  define(:proto_unix, %__MODULE__{
+    name: "unix",
+    code: c_unix(),
+    vcode: Varint.code_to_varint(c_unix()),
+    size: :prefixed_var_size,
+    path: true,
+    transcoder: Transcoder.path_transcoder()
+  })
 
   define(:proto_quic, %__MODULE__{
     name: "quic",
@@ -124,6 +132,7 @@ defmodule Multiaddr.Protocol do
     code: c_https(),
     vcode: Varint.code_to_varint(c_https())
   })
+
   define(:proto_ws, %__MODULE__{
     name: "ws",
     code: c_ws(),
@@ -148,6 +157,7 @@ defmodule Multiaddr.Protocol do
     proto_http().code => proto_http(),
     proto_https().code => proto_https(),
     proto_ws().code => proto_ws(),
+    proto_unix().code => proto_unix()
   })
 
   define(:protocols_by_name, %{
@@ -168,5 +178,6 @@ defmodule Multiaddr.Protocol do
     proto_http().name => proto_http(),
     proto_https().name => proto_https(),
     proto_ws().name => proto_ws(),
+    proto_unix().name => proto_unix()
   })
 end

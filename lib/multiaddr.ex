@@ -38,13 +38,22 @@ defmodule Multiaddr do
   end
 
   def encapsulate(
-        %Multiaddr{bytes: maddr_1_bytes} = _maddr_1,
+        %Multiaddr{bytes: maddr_1_bytes} = maddr_1,
         %Multiaddr{bytes: maddr_2_bytes} = _maddr_2
       ) do
-    with {:ok, _} <- Codec.validate_bytes(maddr_1_bytes),
+    with false <- contains_path_protocol?(maddr_1),
+         {:ok, _} <- Codec.validate_bytes(maddr_1_bytes),
          {:ok, _} <- Codec.validate_bytes(maddr_2_bytes) do
       {:ok, %Multiaddr{bytes: maddr_1_bytes <> maddr_2_bytes}}
+    else
+      true -> {:error, "Cannot encapsulate into a path"}
     end
+  end
+
+  defp contains_path_protocol?(%Multiaddr{} = maddr) do
+    maddr
+    |> protocols()
+    |> Enum.any?(fn p -> p.path end)
   end
 
   def decapsulate(%Multiaddr{bytes: maddr_1_bytes} = _maddr_1, %Multiaddr{} = maddr_2) do

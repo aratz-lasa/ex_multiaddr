@@ -174,11 +174,18 @@ defmodule Multiaddr.Codec do
     {:ok, {0, ""}}
   end
 
-  defp get_protocol_value(%Prot{size: size} = protocol, string_split)
+  defp get_protocol_value(%Prot{size: size, path: is_path?} = protocol, string_split)
        when size == :prefixed_var_size do
-    with {:ok, protocol_bytes} <- protocol.transcoder.string_to_bytes.(Enum.at(string_split, 0)) do
+    {next_index, value_string} =
+      if is_path? do
+        {length(string_split), Enum.join(string_split, "/")}
+      else
+        {1, Enum.at(string_split, 0)}
+      end
+
+    with {:ok, protocol_bytes} <- protocol.transcoder.string_to_bytes.(value_string) do
       protocol_bytes = Varint.LEB128.encode(byte_size(protocol_bytes)) <> protocol_bytes
-      {:ok, {1, protocol_bytes}}
+      {:ok, {next_index, protocol_bytes}}
     end
   end
 
