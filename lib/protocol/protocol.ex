@@ -106,6 +106,30 @@ defmodule Multiaddr.Protocol do
     vcode: Varint.code_to_varint(c_utp())
   })
 
+
+  define(:proto_quic, %__MODULE__{
+    name: "quic",
+    code: c_quic(),
+    vcode: Varint.code_to_varint(c_quic())
+  })
+
+  define(:proto_http, %__MODULE__{
+    name: "http",
+    code: c_http(),
+    vcode: Varint.code_to_varint(c_http())
+  })
+
+  define(:proto_https, %__MODULE__{
+    name: "https",
+    code: c_https(),
+    vcode: Varint.code_to_varint(c_https())
+  })
+  define(:proto_ws, %__MODULE__{
+    name: "ws",
+    code: c_ws(),
+    vcode: Varint.code_to_varint(c_ws())
+  })
+
   define(:protocols_by_code, %{
     proto_ip4().code => proto_ip4(),
     proto_tcp().code => proto_tcp(),
@@ -119,7 +143,11 @@ defmodule Multiaddr.Protocol do
     proto_dnsaddr().code => proto_dnsaddr(),
     proto_sctp().code => proto_sctp(),
     proto_udt().code => proto_udt(),
-    proto_utp().code => proto_utp()
+    proto_utp().code => proto_utp(),
+    proto_quic().code => proto_quic(),
+    proto_http().code => proto_http(),
+    proto_https().code => proto_https(),
+    proto_ws().code => proto_ws(),
   })
 
   define(:protocols_by_name, %{
@@ -135,6 +163,10 @@ defmodule Multiaddr.Protocol do
     proto_dnsaddr().name => proto_dnsaddr(),
     proto_sctp().name => proto_sctp(),
     proto_udt().name => proto_udt(),
-    proto_utp().name => proto_utp()
+    proto_utp().name => proto_utp(),
+    proto_quic().name => proto_quic(),
+    proto_http().name => proto_http(),
+    proto_https().name => proto_https(),
+    proto_ws().name => proto_ws(),
   })
 end

@@ -31,8 +31,8 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 - [X] dns6
 - [X] dnsaddr
 - [X] sctp
-- [ ] udt
-- [ ] utp
+- [X] udt
+- [X] utp
 - [ ] unix
 - [ ] p2p
 - [ ] ipfs
@@ -40,10 +40,10 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 - [ ] onion3
 - [ ] garlic64
 - [ ] garlic32
-- [ ] quic
-- [ ] http
-- [ ] https
-- [ ] ws
+- [X] quic
+- [X] http
+- [X] https
+- [X] ws
 - [ ] wss
 - [ ] p2p-websocket-star
 - [ ] p2p-stardust
