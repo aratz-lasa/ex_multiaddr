@@ -2,13 +2,6 @@ defmodule MultiaddrTranscoderTest do
   use ExUnit.Case
   doctest Multiaddr.Transcoder
 
-  test "default" do
-    default_string = "default"
-    {:ok, default_bytes} = Multiaddr.Transcoder.default_string_to_bytes(default_string)
-    assert {:ok, default_string} == Multiaddr.Transcoder.default_bytes_to_string(default_bytes)
-    assert {:ok, default_string} = Multiaddr.Transcoder.default_validate_bytes(default_string)
-  end
-
   test "text" do
     text_string = "default"
     {:ok, text_bytes} = Multiaddr.Transcoder.text_string_to_bytes(text_string)

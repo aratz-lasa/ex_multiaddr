@@ -26,10 +26,10 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 - [X] dccp
 - [X] ip6
 - [X] ip6zone
-- [ ] dns
-- [ ] dns4
-- [ ] dns6
-- [ ] dnsaddr
+- [X] dns
+- [X] dns4
+- [X] dns6
+- [X] dnsaddr
 - [X] sctp
 - [ ] udt
 - [ ] utp

@@ -3,23 +3,6 @@ defmodule Multiaddr.Transcoder do
 
   defstruct [:bytes_to_string, :string_to_bytes, :validate_bytes]
 
-  # Default
-  def default_bytes_to_string(bytes) when is_binary(bytes) do
-    {:ok, bytes}
-  end
-
-  def default_string_to_bytes(string) when is_binary(string) do
-    if true = String.valid?(string) do
-      {:ok, string}
-    else
-      {:error, "Invalid string"}
-    end
-  end
-
-  def default_validate_bytes(bytes) when is_binary(bytes) do
-    {:ok, bytes}
-  end
-
   # Text
   def text_bytes_to_string(bytes) when is_binary(bytes) do
     if true == valid_text?(bytes) do
@@ -147,19 +130,19 @@ defmodule Multiaddr.Transcoder do
   define(:ip4_transcoder, %__MODULE__{
     bytes_to_string: &ip4_bytes_to_string/1,
     string_to_bytes: &ip4_string_to_bytes/1,
-    validate_bytes: &default_validate_bytes/1
+    validate_bytes: &text_validate_bytes/1
   })
 
   define(:ip6_transcoder, %__MODULE__{
     bytes_to_string: &ip6_bytes_to_string/1,
     string_to_bytes: &ip6_string_to_bytes/1,
-    validate_bytes: &default_validate_bytes/1
+    validate_bytes: &text_validate_bytes/1
   })
 
   define(:port_transcoder, %__MODULE__{
     bytes_to_string: &port_bytes_to_string/1,
     string_to_bytes: &port_string_to_bytes/1,
-    validate_bytes: &default_validate_bytes/1
+    validate_bytes: &text_validate_bytes/1
   })
 
   define(:text_transcoder, %__MODULE__{

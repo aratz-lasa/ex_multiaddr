@@ -133,13 +133,26 @@ defmodule Multiaddr.Codec do
          {:ok, {next_index, size}} <- size_for_protocol(protocol, bytes),
          true <- byte_size(bytes) >= size,
          bytes = split_binary(bytes, next_index..-1),
-         protocol_bytes = split_binary(bytes, 0..(size - 1)),
-         {:ok, _bytes} <- protocol.transcoder.validate_bytes.(protocol_bytes),
+         {:ok, protocol_bytes} = read_protocol_value(protocol, bytes, size),
          {:ok, protocol_value} <- protocol.transcoder.bytes_to_string.(protocol_bytes) do
       {:ok, value_index + next_index + size, {protocol, protocol_value}}
     else
       error ->
         {:error, {"Could not read protocol", error}}
+    end
+  end
+
+  defp read_protocol_value(_protocol, bytes, size) when is_binary(bytes) and size == 0 do
+    {:ok, ""}
+  end
+
+  defp read_protocol_value(protocol, bytes, size)
+       when is_binary(bytes) and is_integer(size) and size > 0 and byte_size(bytes) >= size do
+    protocol_bytes = split_binary(bytes, 0..(size - 1))
+
+    case protocol.transcoder.validate_bytes.(protocol_bytes) do
+      {:ok, _bytes} -> {:ok, protocol_bytes}
+      error -> {:error, {"Error reading protocol value", error}}
     end
   end
 end
