@@ -160,11 +160,56 @@ defmodule Multiaddr.Protocol do
   define(
     :proto_p2p,
     %__MODULE__{
-      name: "p2p", # also "ipfs" (backwards compatibility)
+      # also "ipfs" (backwards compatibility)
+      name: "p2p",
       code: c_p2p(),
       vcode: Varint.code_to_varint(c_p2p()),
       size: :prefixed_var_size,
       transcoder: Transcoder.p2p_transcoder()
+    }
+  )
+
+  define(
+    :proto_onion,
+    %__MODULE__{
+      name: "onion",
+      code: c_onion(),
+      vcode: Varint.code_to_varint(c_onion()),
+      size: 96,
+      transcoder: Transcoder.onion_transcoder()
+    }
+  )
+
+  define(
+    :proto_onion3,
+    %__MODULE__{
+      name: "onion3",
+      code: c_onion3(),
+      vcode: Varint.code_to_varint(c_onion3()),
+      size: 296,
+      transcoder: Transcoder.onion3_transcoder()
+    }
+  )
+
+  define(
+    :proto_garlic64,
+    %__MODULE__{
+      name: "garlic64",
+      code: c_garlic64(),
+      vcode: Varint.code_to_varint(c_garlic64()),
+      size: :prefixed_var_size,
+      transcoder: Transcoder.garlic64_transcoder()
+    }
+  )
+
+  define(
+    :proto_garlic32,
+    %__MODULE__{
+      name: "garlic32",
+      code: c_garlic32(),
+      vcode: Varint.code_to_varint(c_garlic32()),
+      size: :prefixed_var_size,
+      transcoder: Transcoder.garlic32_transcoder()
     }
   )
 
@@ -214,6 +259,15 @@ defmodule Multiaddr.Protocol do
   )
 
   define(
+    :proto_p2p_webrtc_direct,
+    %__MODULE__{
+      name: "p2p-webrtc-direct",
+      code: c_p2p_webrtc_direct(),
+      vcode: Varint.code_to_varint(c_p2p_webrtc_direct())
+    }
+  )
+
+  define(
     :proto_p2p_circuit,
     %__MODULE__{
       name: "p2p-circuit",
@@ -240,11 +294,16 @@ defmodule Multiaddr.Protocol do
       proto_utp().code => proto_utp(),
       proto_unix().code => proto_unix(),
       proto_p2p().code => proto_p2p(),
+      proto_onion().code => proto_onion(),
+      proto_onion3().code => proto_onion3(),
+      proto_garlic64().code => proto_garlic64(),
+      proto_garlic32().code => proto_garlic32(),
       proto_quic().code => proto_quic(),
       proto_http().code => proto_http(),
       proto_https().code => proto_https(),
       proto_ws().code => proto_ws(),
       proto_wss().code => proto_wss(),
+      proto_p2p_webrtc_direct().code => proto_p2p_webrtc_direct(),
       proto_p2p_circuit().code => proto_p2p_circuit()
     }
   )
@@ -266,13 +325,19 @@ defmodule Multiaddr.Protocol do
       proto_udt().name => proto_udt(),
       proto_utp().name => proto_utp(),
       proto_unix().name => proto_unix(),
-      "ipfs" => proto_p2p(),  # backwards compatibility
+      # backwards compatibility
+      "ipfs" => proto_p2p(),
       proto_p2p().name => proto_p2p(),
+      proto_onion().name => proto_onion(),
+      proto_onion3().name => proto_onion3(),
+      proto_garlic64().name => proto_garlic64(),
+      proto_garlic32().name => proto_garlic32(),
       proto_quic().name => proto_quic(),
       proto_http().name => proto_http(),
       proto_https().name => proto_https(),
       proto_ws().name => proto_ws(),
       proto_wss().name => proto_wss(),
+      proto_p2p_webrtc_direct().name => proto_p2p_webrtc_direct(),
       proto_p2p_circuit().name => proto_p2p_circuit()
     }
   )

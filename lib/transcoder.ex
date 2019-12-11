@@ -1,4 +1,5 @@
 defmodule Multiaddr.Transcoder do
+  import Multiaddr.Utils
   import Multiaddr.Utils.Constants
 
   defstruct [:bytes_to_string, :string_to_bytes, :validate_bytes]
@@ -153,7 +154,7 @@ defmodule Multiaddr.Transcoder do
 
   def p2p_bytes_to_string(bytes) when is_binary(bytes) do
     with {:ok, _multihash} <- Multihash.decode(bytes),
-      encoded_string <- B58.encode58(bytes) do
+         encoded_string <- B58.encode58(bytes) do
       {:ok, encoded_string}
     else
       _ -> {:error, "Invalid bytes (p2p)"}
@@ -164,6 +165,115 @@ defmodule Multiaddr.Transcoder do
     case Multihash.decode(bytes) do
       {:ok, _multihash} -> {:ok, bytes}
       _ -> {:error, "Invalid bytes (p2p)"}
+    end
+  end
+
+  # Onion
+  def onion_string_to_bytes(string) when is_binary(string) do
+    with true <- String.valid?(string),
+         [host, port_string] <- String.split(string, ":"),
+         16 <- String.length(host),
+         {:ok, host_bytes} <- Base.decode32(host, case: :lower),
+         port <- String.to_integer(port_string),
+         true <- 0 < port and port < 65536,
+         port_bytes <- <<port::16-big>> do
+      {:ok, host_bytes <> port_bytes}
+    else
+      _ -> {:error, "Invalid string (onion)"}
+    end
+  end
+
+  def onion_bytes_to_string(bytes) when is_binary(bytes) and byte_size(bytes) == 12 do
+    host_string =
+      bytes
+      |> String.slice(0..9)
+      |> Base.encode32(case: :lower)
+
+    <<port::16-big>> = String.slice(bytes, 10..11)
+    {:ok, "#{host_string}:#{port}"}
+  end
+
+  # Onion3
+  def onion3_string_to_bytes(string) when is_binary(string) do
+    with true <- String.valid?(string),
+         [host, port_string] <- String.split(string, ":"),
+         56 <- String.length(host),
+         {:ok, host_bytes} <- Base.decode32(host, case: :lower),
+         port <- String.to_integer(port_string),
+         true <- 0 < port and port < 65536,
+         port_bytes <- <<port::16-big>> do
+      {:ok, host_bytes <> port_bytes}
+    else
+      _ -> {:error, "Invalid string (onion)"}
+    end
+  end
+
+  def onion3_bytes_to_string(bytes) when is_binary(bytes) and byte_size(bytes) == 12 do
+    host_string =
+      bytes
+      |> String.slice(0..34)
+      |> Base.encode32(case: :lower)
+
+    <<port::16-big>> = String.slice(bytes, 35..36)
+    {:ok, "#{host_string}:#{port}"}
+  end
+
+  # Garlic64
+  def garlic64_string_to_bytes(string) when is_binary(string) do
+    with true <- String.valid?(string),
+         true <- 516 <= String.length(string),
+         true <- String.length(string) <= 616 do
+      i2p_decode64(string)
+    else
+      _error -> {:error, "Invalid string (garlic64)"}
+    end
+  end
+
+  def garlic64_bytes_to_string(bytes) when is_binary(bytes) do
+    with {:ok, string} <- i2p_encode64(bytes),
+         true <- 516 <= String.length(string),
+         true <- String.length(string) <= 616 do
+      {:ok, string}
+    else
+      _error -> {:error, "Invalid bytes (garlic64)"}
+    end
+  end
+
+  def garlic64_validate_bytes(bytes) when is_binary(bytes) do
+    if 386 <= byte_size(bytes) do
+      {:ok, bytes}
+    else
+      {:error, "Invalid bytes (garlic64)"}
+    end
+  end
+
+  # Garlic32
+  def garlic32_string_to_bytes(string) when is_binary(string) do
+    with true <- String.valid?(string),
+         true <- 55 < String.length(string) or String.length(string) == 52 do
+      case Base.decode32(string, case: :lower, padding: false) do
+        :error -> {:error, "Invalid string (garlic32)"}
+        {:ok, decoded_bytes} -> {:ok, decoded_bytes}
+      end
+    else
+      _error -> {:error, "Invalid string (garlic64)"}
+    end
+  end
+
+  def garlic32_bytes_to_string(bytes) when is_binary(bytes) do
+    with {:ok, bytes} <- garlic32_validate_bytes(bytes) do
+      string = bytes |> Base.encode32(case: :lower, padding: false) |> String.trim_trailing("=")
+      {:ok, string}
+    else
+      _error -> {:error, "Invalid bytes (garlic64)"}
+    end
+  end
+
+  def garlic32_validate_bytes(bytes) when is_binary(bytes) do
+    if 35 <= byte_size(bytes) or byte_size(bytes) == 32 do
+      {:ok, bytes}
+    else
+      {:error, "Invalid bytes (garlic32)"}
     end
   end
 
@@ -201,5 +311,29 @@ defmodule Multiaddr.Transcoder do
     bytes_to_string: &p2p_bytes_to_string/1,
     string_to_bytes: &p2p_string_to_bytes/1,
     validate_bytes: &p2p_validate_bytes/1
+  })
+
+  define(:onion_transcoder, %__MODULE__{
+    bytes_to_string: &onion_bytes_to_string/1,
+    string_to_bytes: &onion_string_to_bytes/1,
+    validate_bytes: &path_validate_bytes/1
+  })
+
+  define(:onion3_transcoder, %__MODULE__{
+    bytes_to_string: &onion3_bytes_to_string/1,
+    string_to_bytes: &onion3_string_to_bytes/1,
+    validate_bytes: &path_validate_bytes/1
+  })
+
+  define(:garlic64_transcoder, %__MODULE__{
+    bytes_to_string: &garlic64_bytes_to_string/1,
+    string_to_bytes: &garlic64_string_to_bytes/1,
+    validate_bytes: &garlic64_validate_bytes/1
+  })
+
+  define(:garlic32_transcoder, %__MODULE__{
+    bytes_to_string: &garlic32_bytes_to_string/1,
+    string_to_bytes: &garlic32_string_to_bytes/1,
+    validate_bytes: &garlic32_validate_bytes/1
   })
 end

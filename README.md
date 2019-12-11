@@ -36,10 +36,10 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 - [X] unix
 - [X] p2p
 - [X] ipfs
-- [ ] onion
-- [ ] onion3
-- [ ] garlic64
-- [ ] garlic32
+- [X] onion
+- [X] onion3
+- [X] garlic64
+- [X] garlic32
 - [X] quic
 - [X] http
 - [X] https
@@ -48,7 +48,7 @@ be found at [https://hexdocs.pm/ex_multiaddr](https://hexdocs.pm/ex_multiaddr).
 - [ ] p2p-websocket-star
 - [ ] p2p-stardust
 - [ ] p2p-webrtc-star
-- [ ] p2p-webrtc-direct
+- [X] p2p-webrtc-direct
 - [X] p2p-circuit
 - [ ] memory
 
