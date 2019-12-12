@@ -9,12 +9,12 @@ defmodule Multiaddr.Utils do
     |> :binary.list_to_bin()
   end
 
-  def size_for_protocol(%Protocol{size: p_size} = _protocol, bytes)
+  def size_for_protocol(%Protocol{size: p_size, name: name} = _protocol, bytes)
       when p_size == :prefixed_var_size do
     if {:ok, {index, size}} = Varint.read_varint(bytes) do
       {:ok, {index, size}}
     else
-      {:error, "Invalid Varint"}
+      {:error, {:invalid_bytes, "Invalid #{name} bytes "}}
     end
   end
 
@@ -40,7 +40,7 @@ defmodule Multiaddr.Utils do
          true <- encoded_bytes != :error do
       {:ok, encoded_bytes}
     else
-      _error -> {:error, "Invalid i2p base64 encoding"}
+      _error -> {:error, {:invalid_string, "Invalid i2p encoded string #{i2p_string}"}}
     end
   end
 end

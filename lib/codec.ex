@@ -3,26 +3,26 @@ defmodule Multiaddr.Codec do
   import Multiaddr.Utils
   alias Multiaddr.Protocol, as: Prot
 
-  defp extract_protocols(bytes, protocols_list) when bytes == <<>> do
-    {:ok, protocols_list}
+  defp list_protocols(bytes, protocols) when bytes == <<>> do
+    {:ok, protocols}
   end
 
-  defp extract_protocols(bytes, protocols_list) when is_binary(bytes) do
+  defp list_protocols(bytes, protocols) when is_binary(bytes) do
     case read_raw_protocol(bytes) do
       {:ok, {next_index, protocol, _raw_value}} ->
-        extract_protocols(split_binary(bytes, next_index..-1), protocols_list ++ [protocol])
+        list_protocols(split_binary(bytes, next_index..-1), protocols ++ [protocol])
 
       error ->
-        {:error, {"Invalid Multiaddr", error}}
+        error
     end
   end
 
-  def extract_protocols(bytes) when is_binary(bytes) do
-    extract_protocols(bytes, [])
+  def list_protocols(bytes) when is_binary(bytes) do
+    list_protocols(bytes, [])
   end
 
   def validate_bytes(bytes) when bytes == <<>> do
-    {:ok, "Valid bytes"}
+    {:ok, bytes}
   end
 
   def validate_bytes(bytes) when is_binary(bytes) do
@@ -31,7 +31,7 @@ defmodule Multiaddr.Codec do
         validate_bytes(split_binary(bytes, next_index..-1))
 
       error ->
-        {:error, {"Invalid Multiaddr bytes", error}}
+        error
     end
   end
 
@@ -39,9 +39,17 @@ defmodule Multiaddr.Codec do
     string = String.trim_trailing(string, "/")
     split_string = String.split(string, "/")
 
-    with {:ok, ""} <- Enum.fetch(split_string, 0) do
-      string_to_bytes(Enum.slice(split_string, 1..-1), <<>>)
+    case Enum.fetch(split_string, 0) do
+      {:ok, ""} ->
+        string_to_bytes(Enum.slice(split_string, 1..-1), <<>>)
+
+      {:ok, first_string} ->
+        {:error, {:invalid_string, "Address first character must be '/' not '#{first_string}'"}}
     end
+  end
+
+  defp string_to_bytes(string_split, bytes) when string_split == [] and bytes == "" do
+    {:error, {:invalid_string, "Invalid empty address string"}}
   end
 
   defp string_to_bytes(string_split, bytes) when string_split == [] and is_binary(bytes) do
@@ -56,8 +64,8 @@ defmodule Multiaddr.Codec do
       bytes = bytes <> protocol.vcode <> protocol_bytes
       string_to_bytes(Enum.slice(string_split, next_index..-1), bytes)
     else
-      error ->
-        {:error, {"Invalid Multiaddr string", error}}
+      :error -> {:error, {:invalid_protocol_name, Enum.fetch(string_split, 0)}}
+      error -> error
     end
   end
 
@@ -65,24 +73,24 @@ defmodule Multiaddr.Codec do
     bytes_to_string(bytes, "")
   end
 
+  defp bytes_to_string(bytes, string) when bytes == <<>> and string == "" do
+    {:error, {:invalid_bytes, "Invalid empty address bytes"}}
+  end
+
   defp bytes_to_string(bytes, string) when bytes == <<>> and is_binary(string) do
     {:ok, string}
   end
 
   defp bytes_to_string(bytes, string) when is_binary(bytes) and is_binary(string) do
-    case read_protocol(bytes) do
-      {:ok, {next_index, protocol, value}} ->
-        string =
-          if protocol.size == 0 do
-            string <> "/" <> protocol.name
-          else
-            string <> "/" <> protocol.name <> "/" <> value
-          end
+    with {:ok, {next_index, protocol, value}} <- read_protocol(bytes) do
+      string =
+        if protocol.size == 0 do
+          string <> "/" <> protocol.name
+        else
+          string <> "/" <> protocol.name <> "/" <> value
+        end
 
-        bytes_to_string(split_binary(bytes, next_index..-1), string)
-
-      error ->
-        {:error, {"Invalid Multiaddr", error}}
+      bytes_to_string(split_binary(bytes, next_index..-1), string)
     end
   end
 
@@ -98,11 +106,12 @@ defmodule Multiaddr.Codec do
           bytes
           |> split_binary((next_index + size)..0)
           |> find_protocol_by_value(protocol, value)
+        else
+          # There should be no error, but just in case
+          {:error, reason} -> raise Multiaddr.Error, reason: reason
+          error -> raise Multiaddr.Error, reason: {:unknown, "Unknown error: #{inspect(error)}"}
         end
       end
-    else
-      error ->
-        {:error, {"Cannot find protocol", error}}
     end
   end
 
@@ -118,6 +127,9 @@ defmodule Multiaddr.Codec do
       else
         find_protocol(split_binary(bytes, next_index..-1), code, index + next_index)
       end
+    else
+      # If fails, Multiaddr bytes are corrupted
+      {:error, reason} -> raise Multiaddr.Error, reason: reason
     end
   end
 
@@ -125,18 +137,21 @@ defmodule Multiaddr.Codec do
     with {:ok, {next_index, protocol, raw_value}} <- read_raw_protocol(bytes) do
       value =
         if protocol.size > 0 do
-          {:ok, value} = protocol.transcoder.bytes_to_string.(raw_value)
-          value
+          protocol.transcoder.bytes_to_string.(raw_value)
         else
-          raw_value
+          {:ok, raw_value}
         end
 
-      {:ok, {next_index, protocol, value}}
+      case value do
+        {:ok, protocol_value} -> {:ok, {next_index, protocol, protocol_value}}
+        # It shouldn't fail because read_raw_protcol validates bytes. If it does, need to check transcoders
+        error -> error
+      end
     end
   end
 
   defp read_raw_protocol(bytes) when bytes == <<>> do
-    {:error, "End of bytes"}
+    {:error, {:invalid_bytes, "Tried to read empty bytes"}}
   end
 
   defp read_raw_protocol(bytes) when is_binary(bytes) do
@@ -150,8 +165,18 @@ defmodule Multiaddr.Codec do
          {:ok, protocol_bytes} = read_raw_protocol_value(protocol, bytes, size) do
       {:ok, {value_index + next_index + size, protocol, protocol_bytes}}
     else
+      :error ->
+        {:error, {:invalid_protocol_code, code}}
+
+      false ->
+        {:error,
+         {:invalid_bytes,
+          "Invalid protocol value: too short value for protocol #{
+            Map.fetch(Prot.protocols_by_code(), code).name
+          }"}}
+
       error ->
-        {:error, {"Could not read protocol", error}}
+        error
     end
   end
 
@@ -165,7 +190,7 @@ defmodule Multiaddr.Codec do
 
     case protocol.transcoder.validate_bytes.(protocol_bytes) do
       {:ok, _bytes} -> {:ok, protocol_bytes}
-      error -> {:error, {"Error reading protocol value", error}}
+      error -> error
     end
   end
 

@@ -2,18 +2,21 @@ defmodule Multiaddr do
   import Multiaddr.Utils
   alias Multiaddr.Protocol, as: Prot
   alias Multiaddr.Codec
+  alias Multiaddr.Error
 
   defstruct [:bytes]
 
   def new_multiaddr_from_string(string) when is_binary(string) do
-    with {:ok, bytes} <- Codec.string_to_bytes(string) do
-      {:ok, %Multiaddr{bytes: bytes}}
+    case Codec.string_to_bytes(string) do
+      {:ok, bytes} -> {:ok, %Multiaddr{bytes: bytes}}
+      error -> error
     end
   end
 
   def new_multiaddr_from_bytes(bytes) when is_binary(bytes) do
-    with {:ok, _} <- Codec.validate_bytes(bytes) do
-      {:ok, %Multiaddr{bytes: bytes}}
+    case Codec.validate_bytes(bytes) do
+      {:ok, _bytes} -> {:ok, %Multiaddr{bytes: bytes}}
+      error -> error
     end
   end
 
@@ -26,14 +29,16 @@ defmodule Multiaddr do
   end
 
   def string(%Multiaddr{bytes: maddr_bytes} = _maddr) do
-    with {:ok, string} <- Codec.bytes_to_string(maddr_bytes) do
-      string
+    case Codec.bytes_to_string(maddr_bytes) do
+      {:ok, string} -> string
+      {:error, reason} -> raise Multiaddr.Error, reason: reason
     end
   end
 
   def protocols(%Multiaddr{bytes: maddr_bytes} = _maddr) do
-    with {:ok, maddr_protocols} <- Codec.extract_protocols(maddr_bytes) do
-      maddr_protocols
+    case Codec.list_protocols(maddr_bytes) do
+      {:ok, maddr_protocols} -> maddr_protocols
+      {:error, reason} -> raise Multiaddr.Error, reason: reason
     end
   end
 
@@ -42,11 +47,12 @@ defmodule Multiaddr do
         %Multiaddr{bytes: maddr_2_bytes} = _maddr_2
       ) do
     with false <- contains_path_protocol?(maddr_1),
-         {:ok, _} <- Codec.validate_bytes(maddr_1_bytes),
-         {:ok, _} <- Codec.validate_bytes(maddr_2_bytes) do
+         {:ok, _bytes} <- Codec.validate_bytes(maddr_1_bytes),
+         {:ok, _bytes} <- Codec.validate_bytes(maddr_2_bytes) do
       {:ok, %Multiaddr{bytes: maddr_1_bytes <> maddr_2_bytes}}
     else
-      true -> {:error, "Cannot encapsulate into a path"}
+      true -> {:error, {:invalid_order, "Path must be last protocol"}}
+      {:error, reason} -> raise Multiaddr.Error, reason: reason
     end
   end
 
@@ -73,7 +79,8 @@ defmodule Multiaddr do
          {:ok, _index, value} <- Codec.find_protocol(maddr_bytes, protocol) do
       {:ok, value}
     else
-      _ -> {:error, "Invalid protocol"}
+      :error -> {:error, {:invalid_protocol_name, name}}
+      error -> error
     end
   end
 
@@ -82,7 +89,10 @@ defmodule Multiaddr do
          {:ok, _index, value} <- Codec.find_protocol(maddr.bytes, protocol) do
       {:ok, value}
     else
-      _ -> {:error, "Invalid protocol"}
+      :error -> {:error, {:invalid_protocol_code, code}}
+      error -> error
     end
   end
+
+  def format_error(error), do: Error.format_error(error)
 end
