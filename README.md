@@ -1,8 +1,7 @@
 # ex-multiaddr
-[IPFS multiaddr](https://multiformats.io/multiaddr/) implementation in Elixir [under development]
+[IPFS multiaddr](https://multiformats.io/multiaddr/) implementation in Elixir
 
 ## Installation
-Not yet published.
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 by adding `ex_multiaddr` to your list of dependencies in `mix.exs`:
