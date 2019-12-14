@@ -20,8 +20,9 @@ defmodule Multiaddr do
   Returns: `{:ok, maddr}`
 
   ## Examples
-    iex> {:ok, _maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
+
+      iex> {:ok, _maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
   """
   @spec new_multiaddr_from_string(String.t()) :: %Multiaddr{}
   def new_multiaddr_from_string(string) when is_binary(string) do
@@ -37,8 +38,9 @@ defmodule Multiaddr do
   Returns: `{:ok, maddr}`
 
   ## Examples
-    iex> {:ok, _maddr} = Multiaddr.new_multiaddr_from_bytes(<<4, 127, 0, 0, 1>>)
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
+
+      iex> {:ok, _maddr} = Multiaddr.new_multiaddr_from_bytes(<<4, 127, 0, 0, 1>>)
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
   """
   @spec new_multiaddr_from_bytes(binary()) :: %Multiaddr{}
   def new_multiaddr_from_bytes(bytes) when is_binary(bytes) do
@@ -54,10 +56,11 @@ defmodule Multiaddr do
   Returns: `true` or `false`
 
   ## Examples
-    iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
-    iex> true = Multiaddr.equal(maddr, maddr)
-    true
+
+      iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
+      iex> true = Multiaddr.equal(maddr, maddr)
+      true
   """
   @spec equal(%Multiaddr{}, %Multiaddr{}) :: boolean()
   def equal(%Multiaddr{} = maddr1, %Multiaddr{} = maddr2) do
@@ -70,10 +73,11 @@ defmodule Multiaddr do
   Returns: `maddr_bytes`
 
   ## Examples
-    iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
-    iex> Multiaddr.bytes(maddr)
-    <<4, 127, 0, 0, 1>>
+
+      iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
+      iex> Multiaddr.bytes(maddr)
+      <<4, 127, 0, 0, 1>>
   """
   @spec bytes(%Multiaddr{}) :: binary()
   def bytes(%Multiaddr{bytes: maddr_bytes} = _maddr) do
@@ -86,10 +90,11 @@ defmodule Multiaddr do
   Returns: `maddr_string`
 
   ## Examples
-    iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
-    iex> Multiaddr.string(maddr)
-    "/ip4/127.0.0.1"
+
+      iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
+      iex> Multiaddr.string(maddr)
+      "/ip4/127.0.0.1"
   """
   @spec string(%Multiaddr{}) :: String.t()
   def string(%Multiaddr{bytes: maddr_bytes} = _maddr) do
@@ -105,11 +110,12 @@ defmodule Multiaddr do
   Returns: `protocols_list`
 
   ## Examples
-    iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
-    iex> [ip4_protocol] = Multiaddr.protocols(maddr)
-    iex> ip4_protocol.name == "ip4"
-    true
+
+      iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
+      iex> [ip4_protocol] = Multiaddr.protocols(maddr)
+      iex> ip4_protocol.name == "ip4"
+      true
 
   """
   @spec protocols(%Multiaddr{}) :: list(%Protocol{})
@@ -127,12 +133,12 @@ defmodule Multiaddr do
 
   ## Examples
 
-    iex> {:ok, maddr_1} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
-    iex> {:ok, maddr_2} = Multiaddr.new_multiaddr_from_string("/tcp/80")
-    {:ok, %Multiaddr{bytes: <<6, 0, 80>>}}
-    iex> {:ok, _maddr} = Multiaddr.encapsulate(maddr_1, maddr_2)
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1, 6, 0, 80>>}}
+      iex> {:ok, maddr_1} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1")
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
+      iex> {:ok, maddr_2} = Multiaddr.new_multiaddr_from_string("/tcp/80")
+      {:ok, %Multiaddr{bytes: <<6, 0, 80>>}}
+      iex> {:ok, _maddr} = Multiaddr.encapsulate(maddr_1, maddr_2)
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1, 6, 0, 80>>}}
   """
   @spec encapsulate(%Multiaddr{}, %Multiaddr{}) :: %Multiaddr{}
   def encapsulate(
@@ -161,14 +167,16 @@ defmodule Multiaddr do
   Returns: `{:ok, maddr}`
 
   ## Examples
-    iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1/tcp/80")
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1, 6, 0, 80>>}}
-    iex> {:ok, maddr_2} = Multiaddr.new_multiaddr_from_string("/tcp/80")
-    {:ok, %Multiaddr{bytes: <<6, 0, 80>>}}
-    iex> {:ok, maddr_1} = Multiaddr.decapsulate(maddr, maddr_2)
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
-    iex> Multiaddr.string(maddr_1)
-    "/ip4/127.0.0.1"
+
+      iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1/tcp/80")
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1, 6, 0, 80>>}}
+      iex> {:ok, maddr_2} = Multiaddr.new_multiaddr_from_string("/tcp/80")
+      {:ok, %Multiaddr{bytes: <<6, 0, 80>>}}
+      iex> {:ok, maddr_1} = Multiaddr.decapsulate(maddr, maddr_2)
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1>>}}
+      iex> Multiaddr.string(maddr_1)
+      "/ip4/127.0.0.1"
+
   """
   @spec decapsulate(%Multiaddr{}, %Multiaddr{}) :: %Multiaddr{}
   def decapsulate(
@@ -186,10 +194,11 @@ defmodule Multiaddr do
   Returns: `{:ok, value}`
 
   ## Examples
-    iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1/tcp/80")
-    {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1, 6, 0, 80>>}}
-    iex> Multiaddr.value_for_protocol(maddr, "tcp")
-    {:ok, "80"}
+
+      iex> {:ok, maddr} = Multiaddr.new_multiaddr_from_string("/ip4/127.0.0.1/tcp/80")
+      {:ok, %Multiaddr{bytes: <<4, 127, 0, 0, 1, 6, 0, 80>>}}
+      iex> Multiaddr.value_for_protocol(maddr, "tcp")
+      {:ok, "80"}
   """
   @spec value_for_protocol(%Multiaddr{}, protocol_name()) :: protocol_value()
   def value_for_protocol(%Multiaddr{bytes: maddr_bytes} = _maddr, name) when is_binary(name) do
