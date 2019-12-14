@@ -1,4 +1,6 @@
 defmodule Multiaddr.Transcoder do
+  @moduledoc false
+
   import Multiaddr.Utils
   import Multiaddr.Utils.Constants
 
@@ -30,7 +32,8 @@ defmodule Multiaddr.Transcoder do
   end
 
   def valid_text?(string) when is_binary(string) do
-    with true <- String.valid?(string),
+    with true <- 0 < String.length(string),
+         true <- String.valid?(string),
          false <- String.contains?(string, "/") do
       true
     else
@@ -151,15 +154,36 @@ defmodule Multiaddr.Transcoder do
 
   # Path
   def path_string_to_bytes(string) when is_binary(string) do
-    {:ok, string}
+    if valid_path?(string) do
+      {:ok, string}
+    else
+      {:error, {:invalid_string, "Invalid path string: #{string}"}}
+    end
   end
 
   def path_bytes_to_string(bytes) when is_binary(bytes) do
-    {:ok, bytes}
+    if valid_path?(bytes) do
+      {:ok, bytes}
+    else
+      {:error, {:invalid_bytes, "Invalid path bytes"}}
+    end
   end
 
   def path_validate_bytes(bytes) when is_binary(bytes) do
-    {:ok, bytes}
+    if valid_path?(bytes) do
+      {:ok, bytes}
+    else
+      {:error, {:invalid_bytes, "Invalid path bytes"}}
+    end
+  end
+
+  def valid_path?(path) when is_binary(path) do
+    with true <- 0 < String.length(path),
+         true <- String.valid?(path) do
+      true
+    else
+      _ -> false
+    end
   end
 
   # P2P/IPFS
@@ -313,18 +337,27 @@ defmodule Multiaddr.Transcoder do
   def garlic32_string_to_bytes(string) when is_binary(string) do
     with true <- String.valid?(string),
          true <- 55 < String.length(string) or String.length(string) == 52 do
-      case Base.decode32(string, case: :lower) do
-        :error -> {:error, {:invalid_bytes, "Invalid Garlic32 bytes"}}
-        {:ok, decoded_bytes} -> {:ok, decoded_bytes}
+      case Base.decode32(string, case: :lower, padding: false) do
+        :error ->
+          {:error,
+           {:invalid_bytes, "Invalid Garlic32 string. Failed to decode Base 32: #{string}"}}
+
+        {:ok, decoded_bytes} ->
+          {:ok, decoded_bytes}
       end
     else
-      _error -> {:error, {:invalid_bytes, "Invalid Garlic32 bytes"}}
+      _error ->
+        {:error,
+         {:invalid_bytes,
+          "Invalid Garlic32 string. Not correct size, must be <55 or ==52, not #{
+            String.length(string)
+          } "}}
     end
   end
 
   def garlic32_bytes_to_string(bytes) when is_binary(bytes) do
     with true <- 35 <= byte_size(bytes) or byte_size(bytes) == 32 do
-      string = bytes |> Base.encode32(case: :lower) |> String.trim_trailing("=")
+      string = bytes |> Base.encode32(case: :lower, padding: false) |> String.trim_trailing("=")
       {:ok, string}
     else
       _error -> {:error, {:invalid_bytes, "Invalid Garlic32 bytes"}}

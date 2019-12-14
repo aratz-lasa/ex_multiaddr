@@ -1,4 +1,6 @@
 defmodule Multiaddr.Codec do
+  @moduledoc false
+
   import Multiaddr.Utils.Varint
   import Multiaddr.Utils
   alias Multiaddr.Protocol, as: Prot
@@ -94,29 +96,48 @@ defmodule Multiaddr.Codec do
     end
   end
 
-  def find_protocol_by_value(bytes, %Prot{} = protocol, value)
-      when is_binary(bytes) and is_binary(value) do
-    with {:ok, index, protocol_value} <- find_protocol(bytes, protocol) do
-      if value == protocol_value do
-        {:ok, index, protocol_value}
-      else
-        with {:ok, {next_index, _code}} <- read_varint(bytes),
-             bytes = split_binary(bytes, next_index..-1),
-             {:ok, {_index, size}} <- size_for_protocol(protocol, bytes) do
-          bytes
-          |> split_binary((next_index + size)..0)
-          |> find_protocol_by_value(protocol, value)
-        else
-          # There should be no error, but just in case
-          {:error, reason} -> raise Multiaddr.Error, reason: reason
-          error -> raise Multiaddr.Error, reason: {:unknown, "Unknown error: #{inspect(error)}"}
-        end
+  def find_sub_multiaddr(maddr_bytes, sub_maddr_bytes)
+      when is_binary(maddr_bytes) and is_binary(sub_maddr_bytes) do
+    find_sub_multiaddr(maddr_bytes, sub_maddr_bytes, 0)
+  end
+
+  defp find_sub_multiaddr(maddr_bytes, sub_maddr_bytes, index)
+       when is_binary(maddr_bytes) and is_binary(sub_maddr_bytes) and is_integer(index) do
+    if maddr_bytes == sub_maddr_bytes do
+      {:ok, index}
+    else
+      case read_raw_protocol(maddr_bytes) do
+        {:ok, {next_index, _protocol, _raw_value}} ->
+          maddr_bytes = split_binary(maddr_bytes, next_index..-1)
+          find_sub_multiaddr(maddr_bytes, sub_maddr_bytes, next_index)
+
+        error = {:error, {:not_found, _value}} ->
+          error
+
+        {:error, reason} ->
+          raise Multiaddr.Error, reason: reason
       end
+    end
+  end
+
+  defp find_sub_multiaddr(maddr_bytes, sub_maddr_bytes, _index) when maddr_bytes == "" do
+    if {:ok, _bytes} = validate_bytes(sub_maddr_bytes) do
+      {:error, {:not_found, "Not found encapsulated multiaddr"}}
+    else
+      {:eror, {:invalid_bytes, "Invalid encapsulated Multiaddr bytes"}}
     end
   end
 
   def find_protocol(bytes, %Prot{} = protocol) when is_binary(bytes) do
     find_protocol(bytes, protocol.code, 0)
+  end
+
+  defp find_protocol(bytes, code, _index) when bytes == "" do
+    if {:ok, protocol} = Map.fetch(Prot.protocols_by_code(), code) do
+      {:error, {:not_found, "Not found protocol #{protocol.name}"}}
+    else
+      {:eror, {:invalid_protocol_code, "Invalid protocol code #{code}"}}
+    end
   end
 
   defp find_protocol(bytes, code, index)
@@ -129,7 +150,9 @@ defmodule Multiaddr.Codec do
       end
     else
       # If fails, Multiaddr bytes are corrupted
+      error = {:error, {:not_found, _reason}} -> error
       {:error, reason} -> raise Multiaddr.Error, reason: reason
+      error -> raise Multiaddr.Error, reason: {:unknown, "Unknown error: #{inspect(error)}"}
     end
   end
 
@@ -205,7 +228,7 @@ defmodule Multiaddr.Codec do
       if is_path? do
         {length(string_split), Enum.join(string_split, "/")}
       else
-        {1, Enum.at(string_split, 0)}
+        {1, Enum.at(string_split, 0, "")}
       end
 
     with {:ok, protocol_bytes} <- protocol.transcoder.string_to_bytes.(value_string) do
@@ -215,7 +238,8 @@ defmodule Multiaddr.Codec do
   end
 
   defp get_protocol_value(%Prot{size: size} = protocol, string_split) when size > 0 do
-    with {:ok, protocol_bytes} <- protocol.transcoder.string_to_bytes.(Enum.at(string_split, 0)) do
+    with {:ok, protocol_bytes} <-
+           protocol.transcoder.string_to_bytes.(Enum.at(string_split, 0, "")) do
       {:ok, {1, protocol_bytes}}
     end
   end

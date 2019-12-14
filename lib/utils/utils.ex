@@ -1,4 +1,6 @@
 defmodule Multiaddr.Utils do
+  @moduledoc false
+
   alias Multiaddr.Protocol
   alias Multiaddr.Utils.Varint
 

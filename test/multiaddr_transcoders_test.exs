@@ -1,6 +1,5 @@
 defmodule MultiaddrTranscoderTest do
   use ExUnit.Case
-  doctest Multiaddr.Transcoder
 
   test "text" do
     text_string = "default"

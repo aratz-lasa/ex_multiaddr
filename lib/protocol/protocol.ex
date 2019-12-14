@@ -1,4 +1,6 @@
 defmodule Multiaddr.Protocol do
+  @moduledoc false
+
   import Multiaddr.Utils.Constants, only: :macros
   import Multiaddr.Protocol.Codes
   alias Multiaddr.Transcoder

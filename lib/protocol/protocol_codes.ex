@@ -1,4 +1,6 @@
 defmodule Multiaddr.Protocol.Codes do
+  @moduledoc false
+
   import Multiaddr.Utils.Constants, only: :macros
 
   define(:c_ip4, 4)

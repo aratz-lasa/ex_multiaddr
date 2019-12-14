@@ -1,4 +1,6 @@
 defmodule Multiaddr.Error do
+  @moduledoc false
+
   defexception [:reason]
 
   def exception(reason),
