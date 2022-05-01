@@ -41,7 +41,7 @@ defmodule ExMultiaddr.MixProject do
   defp deps do
     [
       {:varint, "~> 1.0.0"},
-      {:ex_multihash, "~> 1.0"},
+      {:ex_multihash, "~> 2.0"},
       {:basefiftyeight, "~> 0.1.0"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false}
     ]
