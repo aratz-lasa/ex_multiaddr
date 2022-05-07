@@ -100,6 +100,7 @@ defmodule ExMultiaddrTest do
     "/udp/1234/udt",
     "/udp/1234/utp",
     "/tcp/1234/http",
+    "/tcp/1234/tls/http",
     "/tcp/1234/https",
     "/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC/tcp/1234",
     "/p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC/tcp/1234",

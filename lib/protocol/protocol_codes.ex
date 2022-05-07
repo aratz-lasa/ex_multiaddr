@@ -23,6 +23,7 @@ defmodule Multiaddr.Protocol.Codes do
   define(:c_onion3, 445)
   define(:c_garlic64, 446)
   define(:c_garlic32, 447)
+  define(:c_tls, 448)
   define(:c_quic, 460)
   define(:c_http, 480)
   define(:c_https, 443)
