@@ -216,6 +216,15 @@ defmodule Multiaddr.Protocol do
   )
 
   define(
+    :proto_tls,
+    %__MODULE__{
+      name: "tls",
+      code: c_tls(),
+      vcode: Varint.code_to_varint(c_tls())
+    }
+  )
+
+  define(
     :proto_quic,
     %__MODULE__{
       name: "quic",
@@ -300,6 +309,7 @@ defmodule Multiaddr.Protocol do
       proto_onion3().code => proto_onion3(),
       proto_garlic64().code => proto_garlic64(),
       proto_garlic32().code => proto_garlic32(),
+      proto_tls().code => proto_tls(),
       proto_quic().code => proto_quic(),
       proto_http().code => proto_http(),
       proto_https().code => proto_https(),
@@ -334,6 +344,7 @@ defmodule Multiaddr.Protocol do
       proto_onion3().name => proto_onion3(),
       proto_garlic64().name => proto_garlic64(),
       proto_garlic32().name => proto_garlic32(),
+      proto_tls().name => proto_tls(),
       proto_quic().name => proto_quic(),
       proto_http().name => proto_http(),
       proto_https().name => proto_https(),
